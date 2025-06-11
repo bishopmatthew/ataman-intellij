@@ -118,11 +118,27 @@ private fun KeyStrokeMap.get(char: Char, isLeafBinding: Boolean): KeyStroke {
     )
 }
 
+private val specialKeys = mapOf(
+    "SPACE" to KeyEvent.VK_SPACE,
+    "ENTER" to KeyEvent.VK_ENTER,
+    "TAB" to KeyEvent.VK_TAB,
+    "ESC" to KeyEvent.VK_ESCAPE,
+    "ESCAPE" to KeyEvent.VK_ESCAPE,
+    "BACKSPACE" to KeyEvent.VK_BACK_SPACE,
+)
+
 fun getKeyStroke(key: String, isLeafBinding: Boolean = false): KeyStroke {
     val trimmedKey = key.trim('"')
-    return when (trimmedKey.length) {
-        1 -> keyStrokeMap.get(trimmedKey[0], isLeafBinding)
-        else -> getFKeyStroke(key, isLeafBinding)
+    val upperKey = trimmedKey.uppercase()
+    return when {
+        specialKeys.containsKey(upperKey) -> KeyStroke.getKeyStroke(
+            specialKeys.getValue(upperKey),
+            0,
+            isLeafBinding
+        )
+        trimmedKey.length == 1 -> keyStrokeMap.get(trimmedKey[0], isLeafBinding)
+        upperKey.matches(Regex("F\\d+")) -> getFKeyStroke(upperKey, isLeafBinding)
+        else -> throw IllegalStateException("Unknown key: $key")
     }
 }
 
