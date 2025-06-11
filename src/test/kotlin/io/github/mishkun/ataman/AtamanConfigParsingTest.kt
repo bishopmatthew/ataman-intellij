@@ -57,6 +57,50 @@ class AtamanConfigParsingTest {
     }
 
     @Test
+    fun `supports named keys`() {
+        val parsedBindings = parseConfig(
+            configDir = tmpFolder.setupStubConfigDir(
+                text = """
+                |bindings {
+                |  SPACE { actionId: CommentByLineComment, description: Comment }
+                |  ENTER { actionId: CommentByLineComment, description: Comment }
+                |}""".trimMargin(),
+            ),
+            ideProductKey = "IC",
+        )
+        assertThat(parsedBindings.exceptionOrNull(), Matchers.nullValue())
+
+        val bindings = parsedBindings.getOrNull()!!
+
+        assertThat(
+            bindings, Matchers.equalTo(
+                listOf(
+                    LeaderBinding.SingleBinding(
+                        KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true),
+                        "SPACE",
+                        "Comment",
+                        "CommentByLineComment",
+                    ),
+                    LeaderBinding.SingleBinding(
+                        KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true),
+                        "ENTER",
+                        "Comment",
+                        "CommentByLineComment",
+                    ),
+                )
+            )
+        )
+
+        bindings.forEach {
+            assertThat(
+                "Leaf binding should use key release event",
+                (it as LeaderBinding.SingleBinding).key.isOnKeyRelease,
+                Matchers.equalTo(true)
+            )
+        }
+    }
+
+    @Test
     fun `supports multibindings`() {
         val parsedBindings = parseConfig(
             configDir = tmpFolder.setupStubConfigDir(
